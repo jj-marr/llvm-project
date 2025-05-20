@@ -3253,6 +3253,24 @@ def fmodules_prune_interval : Joined<["-"], "fmodules-prune-interval=">, Group<i
   Visibility<[ClangOption, CC1Option]>, MetaVarName<"<seconds>">,
   HelpText<"Specify the interval (in seconds) between attempts to prune the module cache">,
   MarshallingInfoInt<HeaderSearchOpts<"ModuleCachePruneInterval">, "7 * 24 * 60 * 60">;
+
+// Template caching options
+def ftemplate_caching : Flag<["-"], "ftemplate-caching">,
+  Group<f_Group>, Flags<[]>, Visibility<[ClangOption, CC1Option]>,
+  HelpText<"Enable caching of template instantiations">,
+  MarshallingInfoFlag<FrontendOpts<"TemplateCachingEnabled">>;
+
+def ftemplate_cache_path : Joined<["-"], "ftemplate-cache-path=">, Group<f_Group>,
+  Flags<[]>, Visibility<[ClangOption, CC1Option]>,
+  MetaVarName<"<directory>">,
+  HelpText<"Specify the template cache path">,
+  MarshallingInfoString<FrontendOpts<"TemplateCacheDirectory">>;
+
+def ftemplate_cache_prefix : Joined<["-"], "ftemplate-cache-prefix=">, Group<f_Group>,
+  Flags<[]>, Visibility<[ClangOption, CC1Option]>,
+  MetaVarName<"<prefix>">,
+  HelpText<"Specify the prefix for template cache files">,
+  MarshallingInfoString<FrontendOpts<"TemplateCachePrefix">>;
 def fmodules_prune_after : Joined<["-"], "fmodules-prune-after=">, Group<i_Group>,
   Visibility<[ClangOption, CC1Option]>, MetaVarName<"<seconds>">,
   HelpText<"Specify the interval (in seconds) after which a module file will be considered unused">,
@@ -6955,7 +6973,7 @@ defm android_pad_segment : BooleanFFlag<"android-pad-segment">, Group<f_Group>;
 def shared_libflangrt : Flag<["-"], "shared-libflangrt">,
   HelpText<"Link the flang-rt shared library">, Group<Link_Group>,
   Visibility<[FlangOption]>, Flags<[NoArgumentUnused]>;
-def static_libflangrt : Flag<["-"], "static-libflangrt">, 
+def static_libflangrt : Flag<["-"], "static-libflangrt">,
   HelpText<"Link the flang-rt static library">, Group<Link_Group>,
   Visibility<[FlangOption]>, Flags<[NoArgumentUnused]>;
 

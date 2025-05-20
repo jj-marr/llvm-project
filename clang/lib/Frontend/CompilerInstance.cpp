@@ -28,6 +28,7 @@
 #include "clang/Frontend/LogDiagnosticPrinter.h"
 #include "clang/Frontend/SARIFDiagnosticPrinter.h"
 #include "clang/Frontend/SerializedDiagnosticPrinter.h"
+#include "clang/CrossTU/CrossTranslationUnit.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
@@ -556,6 +557,12 @@ void CompilerInstance::createASTContext() {
                                  PP.getBuiltinInfo(), PP.TUKind);
   Context->InitBuiltinTypes(getTarget(), getAuxTarget());
   setASTContext(Context);
+
+  // Initialize the cross-translation unit context if template caching is enabled
+  if (getFrontendOpts().TemplateCachingEnabled) {
+    auto CTUContext = std::make_unique<cross_tu::CrossTranslationUnitContext>(*this);
+    Context->setCrossTUContext(std::move(CTUContext));
+  }
 }
 
 // ExternalASTSource

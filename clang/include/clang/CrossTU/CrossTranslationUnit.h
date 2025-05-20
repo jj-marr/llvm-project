@@ -17,6 +17,7 @@
 #include "clang/AST/ASTImporterSharedState.h"
 #include "clang/Analysis/MacroExpansionContext.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/CrossTU/TemplateCaching.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringMap.h"
@@ -205,6 +206,29 @@ public:
   /// is marked with an Error object in this case).
   bool hasError(const Decl *ToDecl) const;
 
+  /// Get the template instantiation cache
+  TemplateInstantiationCache *getTemplateInstantiationCache() const {
+    return TemplateCache.get();
+  }
+
+  /// Cache a template instantiation
+  llvm::Error cacheTemplateInstantiation(const ClassTemplateSpecializationDecl *CTSD);
+  llvm::Error cacheTemplateInstantiation(const FunctionDecl *FD);
+  llvm::Error cacheTemplateInstantiation(const VarTemplateSpecializationDecl *VTSD);
+
+  /// Lookup a template instantiation in the cache
+  llvm::Expected<const ClassTemplateSpecializationDecl *>
+  lookupClassTemplateSpecialization(const ClassTemplateDecl *TD,
+                                   ArrayRef<TemplateArgument> Args);
+
+  llvm::Expected<const FunctionDecl *>
+  lookupFunctionInstantiation(const FunctionTemplateDecl *TD,
+                             ArrayRef<TemplateArgument> Args);
+
+  llvm::Expected<const VarTemplateSpecializationDecl *>
+  lookupVarTemplateSpecialization(const VarTemplateDecl *TD,
+                                 ArrayRef<TemplateArgument> Args);
+
 private:
   void lazyInitImporterSharedSt(TranslationUnitDecl *ToTU);
   ASTImporter &getOrCreateASTImporter(ASTUnit *Unit);
@@ -226,6 +250,7 @@ private:
 
   ASTContext &Context;
   std::shared_ptr<ASTImporterSharedState> ImporterSharedSt;
+  std::unique_ptr<TemplateInstantiationCache> TemplateCache;
 
   using LoadResultTy = llvm::Expected<std::unique_ptr<ASTUnit>>;
 

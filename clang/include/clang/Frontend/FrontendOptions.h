@@ -420,7 +420,17 @@ public:
   LLVM_PREFERRED_TYPE(bool)
   unsigned ClangIRDisableCIRVerifier : 1;
 
+  /// Enable template instantiation caching
+  LLVM_PREFERRED_TYPE(bool)
+  unsigned TemplateCachingEnabled : 1;
+
   CodeCompleteOptions CodeCompleteOpts;
+
+  /// Directory to store template cache files
+  std::string TemplateCacheDirectory;
+
+  /// Prefix for template cache files
+  std::string TemplateCachePrefix;
 
   /// Specifies the output format of the AST.
   ASTDumpOutputFormat ASTDumpFormat = ADOF_Default;
@@ -550,8 +560,10 @@ public:
         EmitSymbolGraphSymbolLabelsForTesting(false),
         EmitPrettySymbolGraphs(false), GenReducedBMI(false),
         UseClangIRPipeline(false), ClangIRDisablePasses(false),
-        ClangIRDisableCIRVerifier(false), TimeTraceGranularity(500),
-        TimeTraceVerbose(false) {}
+        ClangIRDisableCIRVerifier(false), TemplateCachingEnabled(false),
+        TimeTraceGranularity(500), TimeTraceVerbose(false),
+        TemplateCacheDirectory(".template-cache"),
+        TemplateCachePrefix("template-") {}
 
   /// getInputKindForExtension - Return the appropriate input kind for a file
   /// extension. For example, "c" would return Language::C.

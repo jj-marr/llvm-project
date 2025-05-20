@@ -237,7 +237,18 @@ template <typename T> static bool hasBodyOrInit(const T *D) {
 }
 
 CrossTranslationUnitContext::CrossTranslationUnitContext(CompilerInstance &CI)
-    : Context(CI.getASTContext()), ASTStorage(CI) {}
+    : Context(CI.getASTContext()),
+      TemplateCache(std::make_unique<TemplateInstantiationCache>(CI.getASTContext())),
+      ASTStorage(CI) {
+  // Initialize template cache from frontend options
+  if (CI.getFrontendOpts().TemplateCachingEnabled) {
+    TemplateCache->setEnabled(true);
+    if (!CI.getFrontendOpts().TemplateCacheDirectory.empty())
+      TemplateCache->setCacheDirectory(CI.getFrontendOpts().TemplateCacheDirectory);
+    if (!CI.getFrontendOpts().TemplateCachePrefix.empty())
+      TemplateCache->setCacheFilePrefix(CI.getFrontendOpts().TemplateCachePrefix);
+  }
+}
 
 CrossTranslationUnitContext::~CrossTranslationUnitContext() {}
 
@@ -812,6 +823,56 @@ bool CrossTranslationUnitContext::hasError(const Decl *ToDecl) const {
     return false;
   return static_cast<bool>(
       ImporterSharedSt->getImportDeclErrorIfAny(const_cast<Decl *>(ToDecl)));
+}
+
+llvm::Error
+CrossTranslationUnitContext::cacheTemplateInstantiation(
+    const ClassTemplateSpecializationDecl *CTSD) {
+  if (!TemplateCache)
+    return llvm::Error::success();
+  return TemplateCache->cacheTemplateInstantiation(CTSD);
+}
+
+llvm::Error
+CrossTranslationUnitContext::cacheTemplateInstantiation(const FunctionDecl *FD) {
+  if (!TemplateCache)
+    return llvm::Error::success();
+  return TemplateCache->cacheTemplateInstantiation(FD);
+}
+
+llvm::Error
+CrossTranslationUnitContext::cacheTemplateInstantiation(
+    const VarTemplateSpecializationDecl *VTSD) {
+  if (!TemplateCache)
+    return llvm::Error::success();
+  return TemplateCache->cacheTemplateInstantiation(VTSD);
+}
+
+llvm::Expected<const ClassTemplateSpecializationDecl *>
+CrossTranslationUnitContext::lookupClassTemplateSpecialization(
+    const ClassTemplateDecl *TD, ArrayRef<TemplateArgument> Args) {
+  if (!TemplateCache)
+    return llvm::make_error<TemplateCacheError>(
+        template_cache_error_code::cache_miss, "Template cache not initialized");
+  return TemplateCache->lookupClassTemplateSpecialization(TD, Args);
+}
+
+llvm::Expected<const FunctionDecl *>
+CrossTranslationUnitContext::lookupFunctionInstantiation(
+    const FunctionTemplateDecl *TD, ArrayRef<TemplateArgument> Args) {
+  if (!TemplateCache)
+    return llvm::make_error<TemplateCacheError>(
+        template_cache_error_code::cache_miss, "Template cache not initialized");
+  return TemplateCache->lookupFunctionInstantiation(TD, Args);
+}
+
+llvm::Expected<const VarTemplateSpecializationDecl *>
+CrossTranslationUnitContext::lookupVarTemplateSpecialization(
+    const VarTemplateDecl *TD, ArrayRef<TemplateArgument> Args) {
+  if (!TemplateCache)
+    return llvm::make_error<TemplateCacheError>(
+        template_cache_error_code::cache_miss, "Template cache not initialized");
+  return TemplateCache->lookupVarTemplateSpecialization(TD, Args);
 }
 
 } // namespace cross_tu

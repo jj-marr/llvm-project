@@ -43,6 +43,10 @@ namespace clang {
 class ASTContext;
 class ASTReader;
 
+namespace cross_tu {
+class CrossTranslationUnitContext;
+}
+
 namespace serialization {
 class ModuleFile;
 }

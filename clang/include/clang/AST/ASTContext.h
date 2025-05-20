@@ -48,6 +48,12 @@ namespace llvm {
 
 class APFixedPoint;
 class FixedPointSemantics;
+}
+
+namespace clang {
+namespace cross_tu {
+class CrossTranslationUnitContext;
+}
 struct fltSemantics;
 template <typename T, unsigned N> class SmallPtrSet;
 
@@ -514,6 +520,9 @@ private:
   friend class CXXRecordDecl;
   friend class IncrementalParser;
 
+  /// The cross-translation unit context, if any.
+  mutable std::unique_ptr<cross_tu::CrossTranslationUnitContext> CrossTUContext;
+
   /// A mapping to contain the template or declaration that
   /// a variable declaration describes or was instantiated from,
   /// respectively.
@@ -718,6 +727,16 @@ public:
 
   /// Returns the dynamic AST node parent map context.
   ParentMapContext &getParentMapContext();
+
+  /// Returns the cross-translation unit context, if any.
+  cross_tu::CrossTranslationUnitContext *getCrossTUContext() const {
+    return CrossTUContext.get();
+  }
+
+  /// Sets the cross-translation unit context.
+  void setCrossTUContext(std::unique_ptr<cross_tu::CrossTranslationUnitContext> CTU) {
+    CrossTUContext = std::move(CTU);
+  }
 
   // A traversal scope limits the parts of the AST visible to certain analyses.
   // RecursiveASTVisitor only visits specified children of TranslationUnitDecl.

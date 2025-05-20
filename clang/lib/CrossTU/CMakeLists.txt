@@ -5,6 +5,7 @@ set(LLVM_LINK_COMPONENTS
 
 add_clang_library(clangCrossTU
   CrossTranslationUnit.cpp
+  TemplateCaching.cpp
 
   LINK_LIBS
   clangAST
