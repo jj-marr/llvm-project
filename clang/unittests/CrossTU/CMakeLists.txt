@@ -1,5 +1,6 @@
 add_clang_unittest(CrossTUTests
   CrossTranslationUnitTest.cpp
+  TemplateCachingTest.cpp
   CLANG_LIBS
   clangAST
   clangBasic
