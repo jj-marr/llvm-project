@@ -1,10 +1,12 @@
 add_clang_unittest(CrossTUTests
   CrossTranslationUnitTest.cpp
+  TemplateCacheTest.cpp
   CLANG_LIBS
   clangAST
   clangBasic
   clangCrossTU
   clangFrontend
+  clangSema
   clangSerialization
   clangTooling
   LLVM_COMPONENTS
