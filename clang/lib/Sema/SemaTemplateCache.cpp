@@ -432,6 +432,14 @@ SemaTemplateCache *TemplateInstantiationInterceptor::getTemplateCache() const {
 // Utility Functions Implementation
 //===----------------------------------------------------------------------===//
 
+//===----------------------------------------------------------------------===//
+// Sema Integration Methods Implementation
+//===----------------------------------------------------------------------===//
+
+namespace clang {
+
+namespace sema {
+
 TemplateCacheConfig createDefaultCacheConfig(const CompilerInstance &CI) {
   TemplateCacheConfig Config;
 
@@ -486,11 +494,7 @@ std::string getTemplateCacheDirectoryForSema(const CompilerInstance &CI) {
   return std::string(TempDir);
 }
 
-//===----------------------------------------------------------------------===//
-// Sema Integration Methods Implementation
-//===----------------------------------------------------------------------===//
-
-namespace clang {
+} // namespace sema
 
 llvm::Error Sema::initializeTemplateCache(
     const sema::TemplateCacheConfig &Config,

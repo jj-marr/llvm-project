@@ -89,6 +89,10 @@ struct TemplateIdentifier {
            Kind == Other.Kind;
   }
 
+  bool operator!=(const TemplateIdentifier &Other) const {
+    return !(*this == Other);
+  }
+
   bool operator<(const TemplateIdentifier &Other) const {
     if (TemplateUSR != Other.TemplateUSR)
       return TemplateUSR < Other.TemplateUSR;

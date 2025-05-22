@@ -60,7 +60,7 @@ TEST_F(TemplateCacheTest, TemplateIdentifierBasic) {
   EXPECT_NE(TID1, TID3);
 
   // Test ordering
-  EXPECT_LT(TID3, TID1); // float < double lexicographically
+  EXPECT_LT(TID1, TID3); // "double" < "float" lexicographically
 
   // Test string representation
   std::string TIDStr = TID1.toString();
@@ -134,7 +134,6 @@ TEST_F(TemplateCacheTest, TemplateUSRGenerator) {
   auto *TU = Context.getTranslationUnitDecl();
 
   bool FoundClassSpec = false;
-  bool FoundFunctionSpec = false;
 
   for (auto *D : TU->decls()) {
     if (auto *VD = dyn_cast<VarDecl>(D)) {
