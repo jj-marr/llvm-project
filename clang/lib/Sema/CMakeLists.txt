@@ -92,6 +92,7 @@ add_clang_library(clangSema
   SemaTemplate.cpp
   SemaTemplateDeduction.cpp
   SemaTemplateDeductionGuide.cpp
+  SemaTemplateCache.cpp
   SemaTemplateInstantiate.cpp
   SemaTemplateInstantiateDecl.cpp
   SemaTemplateVariadic.cpp
@@ -111,6 +112,7 @@ add_clang_library(clangSema
   clangAST
   clangAnalysis
   clangBasic
+  clangCrossTU
   clangEdit
   clangLex
   clangSupport

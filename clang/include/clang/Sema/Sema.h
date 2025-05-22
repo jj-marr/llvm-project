@@ -65,6 +65,7 @@
 #include "clang/Sema/Redeclaration.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/SemaBase.h"
+#include "clang/Sema/TemplateInstantiationCache.h"
 #include "clang/Sema/TypoCorrection.h"
 #include "clang/Sema/Weak.h"
 #include "llvm/ADT/APInt.h"
@@ -15481,6 +15482,40 @@ public:
   void addDeclWithEffects(const Decl *D, const FunctionEffectsRef &FX);
 
   void performFunctionEffectAnalysis(TranslationUnitDecl *TU);
+
+  ///@}
+
+  //
+  //
+  // -------------------------------------------------------------------------
+  //
+  //
+
+  /// \name Template Caching
+  /// Implementations are in SemaTemplateCache.cpp
+  ///@{
+
+public:
+  /// Get the template cache instance
+  sema::SemaTemplateCache *getTemplateCache() const { return TemplateCache.get(); }
+
+  /// Initialize template caching with the given configuration
+  llvm::Error initializeTemplateCache(const sema::TemplateCacheConfig &Config,
+                                     cross_tu::CrossTranslationUnitContext *CTUContext,
+                                     CompilerInstance &CI);
+
+  /// Get template cache statistics
+  const sema::TemplateCacheStats &getTemplateCacheStats() const;
+
+  /// Reset template cache statistics
+  void resetTemplateCacheStats();
+
+private:
+  /// Template cache instance for caching template instantiations
+  std::unique_ptr<sema::SemaTemplateCache> TemplateCache;
+
+  /// Template instantiation interceptor for hooking into instantiation pipeline
+  std::unique_ptr<sema::TemplateInstantiationInterceptor> TemplateInterceptor;
 
   ///@}
 };

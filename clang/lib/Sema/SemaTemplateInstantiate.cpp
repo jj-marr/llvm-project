@@ -35,6 +35,7 @@
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
 #include "clang/Sema/TemplateInstCallback.h"
+#include "clang/Sema/TemplateInstantiationCache.h"
 #include "llvm/ADT/STLForwardCompat.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -4094,6 +4095,18 @@ bool Sema::InstantiateClassTemplateSpecialization(
   if (ClassTemplateSpec->isInvalidDecl())
     return true;
 
+  // Check template cache for existing instantiation
+  if (getTemplateCache() && getTemplateCache()->isEnabled()) {
+    if (auto CachedResult = getTemplateCache()->getCachedInstantiation(ClassTemplateSpec)) {
+      // Found cached instantiation, use it
+      return false; // Success
+    } else {
+      // Cache miss or error, continue with normal instantiation
+      getTemplateCache()->handleCacheError(CachedResult.takeError(),
+                                          "InstantiateClassTemplateSpecialization");
+    }
+  }
+
   bool HadAvaibilityWarning =
       ShouldDiagnoseAvailabilityOfDecl(ClassTemplateSpec, nullptr, nullptr)
           .first != AR_Available;
@@ -4119,6 +4132,16 @@ bool Sema::InstantiateClassTemplateSpecialization(
            TSK_Undeclared);
     DiagnoseAvailabilityOfDecl(ClassTemplateSpec, PointOfInstantiation);
   }
+
+  // Cache the instantiated template if successful
+  if (!Err && getTemplateCache() && getTemplateCache()->isEnabled()) {
+    const TemplateArgumentList &TemplateArgs = ClassTemplateSpec->getTemplateArgs();
+    if (auto CacheErr = getTemplateCache()->cacheInstantiation(ClassTemplateSpec, TemplateArgs)) {
+      getTemplateCache()->handleCacheError(std::move(CacheErr),
+                                          "InstantiateClassTemplateSpecialization_cache");
+    }
+  }
+
   return Err;
 }
 
