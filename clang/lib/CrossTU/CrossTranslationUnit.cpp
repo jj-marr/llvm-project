@@ -12,9 +12,11 @@
 #include "clang/CrossTU/CrossTranslationUnit.h"
 #include "clang/AST/ASTImporter.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ParentMapContext.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CrossTU/CrossTUDiagnostic.h"
+#include "clang/CrossTU/TemplateCache.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -237,7 +239,7 @@ template <typename T> static bool hasBodyOrInit(const T *D) {
 }
 
 CrossTranslationUnitContext::CrossTranslationUnitContext(CompilerInstance &CI)
-    : Context(CI.getASTContext()), ASTStorage(CI) {}
+    : CI(CI), Context(CI.getASTContext()), ASTStorage(CI) {}
 
 CrossTranslationUnitContext::~CrossTranslationUnitContext() {}
 
@@ -812,6 +814,98 @@ bool CrossTranslationUnitContext::hasError(const Decl *ToDecl) const {
     return false;
   return static_cast<bool>(
       ImporterSharedSt->getImportDeclErrorIfAny(const_cast<Decl *>(ToDecl)));
+}
+
+//===----------------------------------------------------------------------===//
+// Template Caching Implementation
+//===----------------------------------------------------------------------===//
+
+llvm::Expected<const ClassTemplateSpecializationDecl *>
+CrossTranslationUnitContext::getCachedTemplateInstantiation(
+    const ClassTemplateSpecializationDecl *Spec,
+    StringRef CrossTUDir,
+    StringRef IndexName) {
+
+  if (!isTemplateCachingEnabled())
+    return llvm::make_error<cross_tu::TemplateCacheError>(
+        cross_tu::template_cache_error_code::template_not_found_in_cache,
+        "Template caching is not enabled");
+
+  auto CachedDecl = getTemplateCache().getCachedTemplateInstantiation(
+      Spec, CrossTUDir, IndexName);
+
+  if (!CachedDecl)
+    return CachedDecl.takeError();
+
+  return dyn_cast<ClassTemplateSpecializationDecl>(*CachedDecl);
+}
+
+llvm::Expected<const FunctionDecl *>
+CrossTranslationUnitContext::getCachedTemplateInstantiation(
+    const FunctionDecl *FD,
+    const FunctionTemplateSpecializationInfo *Spec,
+    StringRef CrossTUDir,
+    StringRef IndexName) {
+
+  if (!isTemplateCachingEnabled())
+    return llvm::make_error<cross_tu::TemplateCacheError>(
+        cross_tu::template_cache_error_code::template_not_found_in_cache,
+        "Template caching is not enabled");
+
+  auto CachedDecl = getTemplateCache().getCachedTemplateInstantiation(
+      FD, Spec, CrossTUDir, IndexName);
+
+  if (!CachedDecl)
+    return CachedDecl.takeError();
+
+  return dyn_cast<FunctionDecl>(*CachedDecl);
+}
+
+llvm::Expected<const VarTemplateSpecializationDecl *>
+CrossTranslationUnitContext::getCachedTemplateInstantiation(
+    const VarTemplateSpecializationDecl *Spec,
+    StringRef CrossTUDir,
+    StringRef IndexName) {
+
+  if (!isTemplateCachingEnabled())
+    return llvm::make_error<cross_tu::TemplateCacheError>(
+        cross_tu::template_cache_error_code::template_not_found_in_cache,
+        "Template caching is not enabled");
+
+  auto CachedDecl = getTemplateCache().getCachedTemplateInstantiation(
+      Spec, CrossTUDir, IndexName);
+
+  if (!CachedDecl)
+    return CachedDecl.takeError();
+
+  return dyn_cast<VarTemplateSpecializationDecl>(*CachedDecl);
+}
+
+llvm::Error CrossTranslationUnitContext::cacheTemplateInstantiation(
+    const Decl *InstantiatedDecl,
+    const TemplateArgumentList &Args,
+    StringRef CrossTUDir,
+    StringRef IndexName) {
+
+  if (!isTemplateCachingEnabled())
+    return llvm::Error::success(); // Silently ignore if caching is disabled
+
+  return getTemplateCache().cacheTemplateInstantiation(
+      InstantiatedDecl, Args, CrossTUDir, IndexName);
+}
+
+bool CrossTranslationUnitContext::isTemplateCachingEnabled() const {
+  // For now, template caching is always enabled when the infrastructure is available
+  // TODO: Add configuration option to enable/disable template caching
+  return true;
+}
+
+TemplateInstantiationCache &CrossTranslationUnitContext::getTemplateCache() {
+  if (!TemplateCache) {
+    // Lazy initialization of template cache
+    TemplateCache = std::make_unique<TemplateInstantiationCache>(CI, *this);
+  }
+  return *TemplateCache;
 }
 
 } // namespace cross_tu

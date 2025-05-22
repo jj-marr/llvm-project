@@ -34,8 +34,15 @@ class FunctionDecl;
 class VarDecl;
 class NamedDecl;
 class TranslationUnitDecl;
+class ClassTemplateSpecializationDecl;
+class FunctionTemplateSpecializationInfo;
+class VarTemplateSpecializationDecl;
+class TemplateArgumentList;
 
 namespace cross_tu {
+
+// Forward declarations for template caching
+class TemplateInstantiationCache;
 
 enum class index_error_code {
   success = 0,
@@ -205,6 +212,38 @@ public:
   /// is marked with an Error object in this case).
   bool hasError(const Decl *ToDecl) const;
 
+  /// Template caching functionality
+  /// Get a cached template instantiation for a class template specialization
+  llvm::Expected<const ClassTemplateSpecializationDecl *>
+  getCachedTemplateInstantiation(const ClassTemplateSpecializationDecl *Spec,
+                                StringRef CrossTUDir,
+                                StringRef IndexName);
+
+  /// Get a cached template instantiation for a function template specialization
+  llvm::Expected<const FunctionDecl *>
+  getCachedTemplateInstantiation(const FunctionDecl *FD,
+                                const FunctionTemplateSpecializationInfo *Spec,
+                                StringRef CrossTUDir,
+                                StringRef IndexName);
+
+  /// Get a cached template instantiation for a variable template specialization
+  llvm::Expected<const VarTemplateSpecializationDecl *>
+  getCachedTemplateInstantiation(const VarTemplateSpecializationDecl *Spec,
+                                StringRef CrossTUDir,
+                                StringRef IndexName);
+
+  /// Cache a template instantiation
+  llvm::Error cacheTemplateInstantiation(const Decl *InstantiatedDecl,
+                                        const TemplateArgumentList &Args,
+                                        StringRef CrossTUDir,
+                                        StringRef IndexName);
+
+  /// Check if template caching is enabled
+  bool isTemplateCachingEnabled() const;
+
+  /// Get the template cache instance (lazy initialization)
+  TemplateInstantiationCache &getTemplateCache();
+
 private:
   void lazyInitImporterSharedSt(TranslationUnitDecl *ToTU);
   ASTImporter &getOrCreateASTImporter(ASTUnit *Unit);
@@ -224,6 +263,7 @@ private:
 
   ImporterMapTy ASTUnitImporterMap;
 
+  CompilerInstance &CI;
   ASTContext &Context;
   std::shared_ptr<ASTImporterSharedState> ImporterSharedSt;
 
@@ -346,6 +386,9 @@ private:
   };
 
   ASTUnitStorage ASTStorage;
+
+  /// Template caching support
+  mutable std::unique_ptr<TemplateInstantiationCache> TemplateCache;
 };
 
 } // namespace cross_tu
