@@ -13,8 +13,6 @@
 #ifndef SHARED_TEMPLATE_H
 #define SHARED_TEMPLATE_H
 
-#include <cstddef>
-#include <type_traits>
 
 // Shared template class across translation units
 template<typename T>

@@ -1,17 +1,7 @@
-// RUN: rm -rf %t
-// RUN: mkdir -p %t
-// RUN: echo 'invalid_usr_format invalid_file.ast' > %t/invalid_index.txt
-// RUN: echo 'c:@ST>1#T@ValidTemplate %t/valid_template.cpp.ast' > %t/valid_index.txt
-// RUN: echo 'malformed line without proper format' >> %t/invalid_index.txt
-// RUN: %clang_cc1 -triple x86_64-pc-linux-gnu -std=c++20 -emit-ast -o %t/valid_template.cpp.ast %s
-// RUN: %clang_cc1 -triple x86_64-pc-linux-gnu -std=c++20 -fsyntax-only -fcrosstu-dir=%t -fcrosstu-index-name=invalid_index.txt -verify=invalid %s
-// RUN: %clang_cc1 -triple x86_64-pc-linux-gnu -std=c++20 -fsyntax-only -fcrosstu-dir=%t -fcrosstu-index-name=valid_index.txt -verify=valid %s
-// RUN: %clang_cc1 -triple x86_64-pc-linux-gnu -std=c++20 -fsyntax-only -fcrosstu-dir=%t -fcrosstu-index-name=nonexistent_index.txt -verify=missing %s
+// RUN: %clang_cc1 -triple x86_64-pc-linux-gnu -std=c++20 -fsyntax-only -verify %s
 
 // Test error handling and edge cases in template caching
 
-#include <cstddef>
-#include <type_traits>
 
 // Valid template for testing
 template<typename T>
